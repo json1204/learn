@@ -1,0 +1,60 @@
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Lazyload</title>
+  <style>
+    .image-item {
+      display: block;
+      margin-bottom: 50px;
+      height: 200px;
+      width: 400px;
+    }
+  </style>
+</head>
+
+<body>
+  <img src="./img/default.png" class="image-item" data-original="./img/1.jpg" />
+  <img src="./img/default.png" class="image-item" data-original="./img/2.jpg" />
+  <img src="./img/default.png" class="image-item" data-original="./img/3.jpg" />
+  <img src="./img/default.png" class="image-item" data-original="./img/4.jpg" />
+  <img src="./img/default.png" class="image-item" data-original="./img/5.jpg" />
+  <img src="./img/default.png" class="image-item" data-original="./img/6.jpg" />
+  <img src="./img/default.png" class="image-item" data-original="./img/7.jpg" />
+  <img src="./img/default.png" class="image-item" data-original="./img/8.jpg" />
+  <img src="./img/default.png" class="image-item" data-original="./img/9.jpg" />
+  <img src="./img/default.png" class="image-item" data-original="./img/10.jpg" />
+  <script>
+    const images = document.querySelectorAll('img[data-original]')
+    const config = {
+      rootMargin: '0px',
+      threshold: 0
+    };
+    let observer = new IntersectionObserver((entries, self) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            // 加载图像
+            preloadImage(entry.target);
+            // 解除观察
+            self.unobserve(entry.target)
+          }
+        })
+      },
+      config)
+
+    images.forEach(image => {
+      observer.observe(image);
+    });
+
+    function preloadImage(img) {
+      const src = img.dataset.original
+      if (!src) {
+        return;
+      }
+      img.src = src;
+      img.removeAttribute("data-original")
+    }
+  </script>
+</body>
+
+</html>
