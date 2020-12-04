@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Lazyload</title>
   <style>
-    .image-item {
+    img {
       display: block;
       margin-bottom: 50px;
       height: 200px;
@@ -14,55 +14,59 @@
 </head>
 
 <body>
-  <img src="./img/default.png" class="image-item" data-original="./img/1.jpg" />
-  <img src="./img/default.png" class="image-item" data-original="./img/2.jpg" />
-  <img src="./img/default.png" class="image-item" data-original="./img/3.jpg" />
-  <img src="./img/default.png" class="image-item" data-original="./img/4.jpg" />
-  <img src="./img/default.png" class="image-item" data-original="./img/5.jpg" />
-  <img src="./img/default.png" class="image-item" data-original="./img/6.jpg" />
-  <img src="./img/default.png" class="image-item" data-original="./img/7.jpg" />
-  <img src="./img/default.png" class="image-item" data-original="./img/8.jpg" />
-  <img src="./img/default.png" class="image-item" data-original="./img/9.jpg" />
-  <img src="./img/default.png" class="image-item" data-original="./img/10.jpg" />
-  <script>
-    var viewHeight = document.body.clientHeight //获取可视区高度
-    console.log(viewHeight)
-
-    function lazyload() {
-      var imgs = document.querySelectorAll('img[data-original]')
-      Array.prototype.forEach.call(imgs, function (item, index) {
-        var rect
-        if (item.dataset.original === '') return
-
-        rect = item.getBoundingClientRect() // 用于获得页面中某个元素的左，上，右和下分别相对浏览器视窗的位置
-        if (rect.bottom >= 0 && rect.top < viewHeight) {
-          item.src = item.dataset.original
-          item.removeAttribute("data-original")
-          // ! function () {
-          //   item.src = item.dataset.original
-          //   // var img = new Image()
-          //   // img.src = item.dataset.original
-          //   // img.onload = function () {
-          //   //   item.src = img.src
-          //   // }
-          //   item.removeAttribute("data-original") //移除属性，下次不再遍历
-          // }()
-        }
-      })
-    }
-    lazyload() // 刚开始还没滚动屏幕时，要先触发一次函数，初始化首页的页面图片
-    document.addEventListener("scroll", debounce(lazyload, 100))
-
-    function debounce(event, time) {
-      let timer = null
-      return function (...args) {
-        clearTimeout(timer)
-        timer = setTimeout(() => {
-          event.apply(this, args)
-        }, time)
-      }
-    }
-  </script>
+  <img src="./img/default.png" data-src="./img/1.jpg" />
+  <img src="./img/default.png" data-src="./img/2.jpg" />
+  <img src="./img/default.png" data-src="./img/3.jpg" />
+  <img src="./img/default.png" data-src="./img/4.jpg" />
+  <img src="./img/default.png" data-src="./img/5.jpg" />
+  <img src="./img/default.png" data-src="./img/6.jpg" />
+  <img src="./img/default.png" data-src="./img/7.jpg" />
+  <img src="./img/default.png" data-src="./img/8.jpg" />
+  <img src="./img/default.png" data-src="./img/9.jpg" />
+  <img src="./img/default.png" data-src="./img/10.jpg" />
 </body>
+<script>
+  function lazyload() {
+    let viewHeight = document.body.clientHeight //获取可视区高度
+    let imgs = document.querySelectorAll('img[data-src]')
+    imgs.forEach((item, index) => {
+      if (item.dataset.src === '') return
+
+      // 用于获得页面中某个元素的左，上，右和下分别相对浏览器视窗的位置
+      let rect = item.getBoundingClientRect()
+      if (rect.bottom >= 0 && rect.top < viewHeight) {
+        item.src = item.dataset.src
+        item.removeAttribute("data-src")
+      }
+    })
+  }
+
+  lazyload() // 刚开始还没滚动屏幕时，要先触发一次函数，初始化首页的页面图片
+  window.addEventListener("scroll", throttle(lazyload, 200))
+
+  function throttle(fn, delay) {
+    let timer
+    let prevTime
+    return function (...args) {
+      const currTime = Date.now()
+      const context = this
+      if (!prevTime) prevTime = currTime
+      clearTimeout(timer)
+
+      if (currTime - prevTime > delay) {
+        prevTime = currTime
+        fn.apply(context, args)
+        clearTimeout(timer)
+        return
+      }
+
+      timer = setTimeout(function () {
+        prevTime = Date.now()
+        timer = null
+        fn.apply(context, args)
+      }, delay)
+    }
+  }
+</script>
 
 </html>
