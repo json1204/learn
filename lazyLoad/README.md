@@ -144,7 +144,7 @@ io.unobserve(element)
 io.disconnect()
 ```
 
-IntersectionObserver 是浏览器原生提供的构造函数，接受两个参数：callback 是可见性变化时的回调函数，option 是配置对象（该参数可选）。  
+IntersectionObserver 是浏览器原生提供的构造函数，接受两个参数：callback 是可见性变化时的回调函数，option 是配置对象（该参数可选）。
 
 目标元素的可见性变化时，就会调用观察器的回调函数 callback。callback 一般会触发两次。一次是目标元素刚刚进入视口（开始可见），另一次是完全离开视口（开始不可见）。
 
@@ -153,12 +153,41 @@ var io = new IntersectionObserver((entries) => {
   console.log(entries)
 })
 ```
+
 callback 函数的参数（entries）是一个数组，每个成员都是一个 IntersectionObserverEntry 对象。举例来说，如果同时有两个被观察的对象的可见性发生变化，entries 数组就会有两个成员。
 
-* time：可见性发生变化的时间，是一个高精度时间戳，单位为毫秒
-* target：被观察的目标元素，是一个 DOM 节点对象
-* isIntersecting: 目标是否可见
-* rootBounds：根元素的矩形区域的信息，getBoundingClientRect()方法的返回值，如果没有根元素（即直接相对于视口滚动），则返回 null
-* boundingClientRect：目标元素的矩形区域的信息
-* intersectionRect：目标元素与视口（或根元素）的交叉区域的信息
-* intersectionRatio：目标元素的可见比例，即 intersectionRect 占 boundingClientRect 的比例，完全可见时为 1，完全不可见时小于等于 0
+- time：可见性发生变化的时间，是一个高精度时间戳，单位为毫秒
+- target：被观察的目标元素，是一个 DOM 节点对象
+- isIntersecting: 目标是否可见
+- rootBounds：根元素的矩形区域的信息，getBoundingClientRect()方法的返回值，如果没有根元素（即直接相对于视口滚动），则返回 null
+- boundingClientRect：目标元素的矩形区域的信息
+- intersectionRect：目标元素与视口（或根元素）的交叉区域的信息
+- intersectionRatio：目标元素的可见比例，即 intersectionRect 占 boundingClientRect 的比例，完全可见时为 1，完全不可见时小于等于 0
+
+下面我们用 IntersectionObserver 实现图片懒加载
+
+```js
+const imgs = document.querySelectorAll('img[data-src]')
+const config = {
+  rootMargin: '0px',
+  threshold: 0,
+}
+let observer = new IntersectionObserver((entries, self) => {
+  entries.forEach((entry) => {
+    if (entry.isIntersecting) {
+      let img = entry.target
+      let src = img.dataset.src
+      if (src) {
+        img.src = src
+        img.removeAttribute('data-src')
+      }
+      // 解除观察
+      self.unobserve(entry.target)
+    }
+  })
+}, config)
+
+imgs.forEach((image) => {
+  observer.observe(image)
+})
+```

@@ -35,8 +35,10 @@
           if (entry.isIntersecting) {
             let img = entry.target
             let src = img.dataset.src
-            img.src = src;
-            img.removeAttribute("data-src")
+            if (src) {
+              img.src = src;
+              img.removeAttribute("data-src")
+            }
             // 解除观察
             self.unobserve(entry.target)
           }
