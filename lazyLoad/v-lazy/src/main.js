@@ -1,14 +1,12 @@
 const LazyLoad = {
   // install方法
   install (Vue, options) {
-    console.log(options)
     const defaultSrc = options.default
     Vue.directive('lazy', {
       bind (el, binding) {
         LazyLoad.init(el, binding.value, defaultSrc)
       },
       inserted (el) {
-        // 兼容处理
         if (IntersectionObserver) {
           LazyLoad.observe(el)
         } else {
@@ -19,9 +17,7 @@ const LazyLoad = {
   },
   // 初始化
   init (el, val, def) {
-    // data-src 储存真实src
     el.setAttribute('data-src', val)
-    // 设置src为loading图
     el.setAttribute('src', def)
   },
   // 利用IntersectionObserver监听el

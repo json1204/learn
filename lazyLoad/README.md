@@ -191,3 +191,128 @@ imgs.forEach((image) => {
   observer.observe(image)
 })
 ```
+
+### 懒加载指令
+
+Vue 中除了平时常用的 v-show、v-bind、v-for 等指令外，还可以自定义指令。Vue 指令定义函数提供了几个钩子函数（可选）：
+
+- bind: 只调用一次，指令第一次绑定到元素时调用，可以定义一个在绑定时执行一次的初始化动作。
+- inserted: 被绑定元素插入父节点时调用（父节点存在即可调用，不必存在于 document 中）。
+- update: 被绑定元素所在的模板更新时调用，而不论绑定值是否变化。通过比较更新前后的绑定值。
+- componentUpdated: 被绑定元素所在模板完成一次更新周期时调用。
+- unbind: 只调用一次， 指令与元素解绑时调用。
+
+实现一个懒加载指令的思路
+
+1. 判断浏览器是否支持 IntersectionObserver API，如果支持就使用 IntersectionObserver 实现懒加载，否则则使用 srcoll 事件监听 + 节流的方法实现。
+2. 通过 Vue.directive 注册一个 v-lazy 的指令，暴露一个 install()函数，供 Vue 调用。
+3. 在 main.js 里 use(指令) 即可调用。
+4. 将组件内 `<img>` 标签的 src 换成 v-lazy 即可实现图片懒加载。
+
+代码如下
+
+新建 LazyLoad.js 文件
+
+```js
+const LazyLoad = {
+  // install方法
+  install(Vue, options) {
+    const defaultSrc = options.default
+    Vue.directive('lazy', {
+      bind(el, binding) {
+        LazyLoad.init(el, binding.value, defaultSrc)
+      },
+      inserted(el) {
+        if (IntersectionObserver) {
+          LazyLoad.observe(el)
+        } else {
+          LazyLoad.listenerScroll(el)
+        }
+      },
+    })
+  },
+  // 初始化
+  init(el, val, def) {
+    el.setAttribute('data-src', val)
+    el.setAttribute('src', def)
+  },
+  // 利用IntersectionObserver监听el
+  observe(el) {
+    var io = new IntersectionObserver((entries) => {
+      const realSrc = el.dataset.src
+      if (entries[0].isIntersecting) {
+        if (realSrc) {
+          el.src = realSrc
+          el.removeAttribute('data-src')
+        }
+      }
+    })
+    io.observe(el)
+  },
+  // 监听scroll事件
+  listenerScroll(el) {
+    const handler = LazyLoad.throttle(LazyLoad.load, 300)
+    LazyLoad.load(el)
+    window.addEventListener('scroll', () => {
+      handler(el)
+    })
+  },
+  // 加载真实图片
+  load(el) {
+    const windowHeight = document.documentElement.clientHeight
+    const elTop = el.getBoundingClientRect().top
+    const elBtm = el.getBoundingClientRect().bottom
+    const realSrc = el.dataset.src
+    if (elTop - windowHeight < 0 && elBtm > 0) {
+      if (realSrc) {
+        el.src = realSrc
+        el.removeAttribute('data-src')
+      }
+    }
+  },
+  // 节流
+  throttle(fn, delay) {
+    let timer
+    let prevTime
+    return function (...args) {
+      const currTime = Date.now()
+      const context = this
+      if (!prevTime) prevTime = currTime
+      clearTimeout(timer)
+
+      if (currTime - prevTime > delay) {
+        prevTime = currTime
+        fn.apply(context, args)
+        clearTimeout(timer)
+        return
+      }
+
+      timer = setTimeout(function () {
+        prevTime = Date.now()
+        timer = null
+        fn.apply(context, args)
+      }, delay)
+    }
+  },
+}
+
+export default LazyLoad
+```
+
+在 main.js 里 use 指令
+
+```js
+import LazyLoad from './LazyLoad.js'
+
+Vue.use(LazyLoad, {
+  default: 'xxx.png',
+})
+```
+
+将组件内 `<img>` 标签的 src 换成 v-lazy
+
+```html
+<img v-lazy="xxx.jpg" />
+```
+
+这样就能完成一个 vue 懒加载的指令了。
