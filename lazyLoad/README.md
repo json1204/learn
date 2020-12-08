@@ -16,22 +16,18 @@
 
 针对以上情况，进行图片懒加载有以下优点：
 
-1. 减少资源的加载，页面启动只加载首页的图片，这样能明显减少了服务器的压力和流量，也能够减小浏览器的负担。
-2. 防止并发加载的资源过多会阻塞 js 的加载，影响网站的正常使用。
+1. 减少资源的加载，页面启动只加载首屏的图片，这样能明显减少了服务器的压力和流量，也能够减小浏览器的负担。
+2. 防止并发加载的资源过多而阻塞 js 的加载，影响整个网站的启动。
 3. 能提升用户的体验，不妨设想下，用户打开页面的时候，如果页面上所有的图片都需要加载，由于图片数目较大，等待时间很长这就严重影响用户体验。
 
 ### 图片懒加载的原理
 
 图片懒加载的原理主要是判断当前图片是否到了可视区域这一核心逻辑实现的
 
-1. 拿到所有的图片 img dom 。
+1. 拿到所有的图片 dome 。
 2. 遍历每个图片判断当前图片是否到了可视区范围内。
 3. 如果到了就设置图片的 src 属性。
-4. 绑定 window 的 scroll 事件，对其进行事件监听。
-
-### 传统方法
-
-传统的图片懒加载主要是通过绑定 window 的 scroll 事件，进行事件监听，判断当前图片是否到了可视区域。
+4. 绑定 window 的 `scroll` 事件，对其进行事件监听。
 
 我们先来看下页面结构
 
@@ -64,7 +60,7 @@
 </html>
 ```
 
-先获取所有图片的 dom，通过 document.body.clientHeight 获取可视区高度，再使用 element.getBoundingClientRect() API 直接得到元素相对浏览的 top 值， 遍历每个图片判断当前图片是否到了可视区范围内。代码如下：
+先获取所有图片的 dom，通过 `document.body.clientHeight` 获取可视区高度，再使用 `element.getBoundingClientRect()` API 直接得到元素相对浏览的 top 值， 遍历每个图片判断当前图片是否到了可视区范围内。代码如下：
 
 ```js
 function lazyload() {
@@ -83,13 +79,13 @@ function lazyload() {
 }
 ```
 
-最后给 window 绑定 onscroll 事件
+最后给 window 绑定 `onscroll` 事件
 
 ```js
 window.addEventListener('scroll', lazyload)
 ```
 
-主要就完成了一个图片懒加载的操作了。但是这样存在较大的性能问题，因为 scroll 事件会在很短的时间内触发很多次，严重影响页面性能，为了提高网页性能，我们需要一个节流函数来控制函数的多次触发，在一段时间内（如 200ms）只执行一次回调。
+主要就完成了一个图片懒加载的操作了。但是这样存在较大的性能问题，因为 `scroll` 事件会在很短的时间内触发很多次，严重影响页面性能，为了提高网页性能，我们需要一个节流函数来控制函数的多次触发，在一段时间内（如 200ms）只执行一次回调。
 
 下面实现一个节流函数
 
@@ -119,7 +115,7 @@ function throttle(fn, delay) {
 }
 ```
 
-然后修改一下 srcoll 事件
+然后修改一下 `srcoll` 事件
 
 ```js
 window.addEventListener('scroll', throttle(lazyload, 200))
@@ -127,9 +123,9 @@ window.addEventListener('scroll', throttle(lazyload, 200))
 
 ### IntersectionObserver
 
-通过上面例子的实现，我们要实现懒加载都需要去监听 scroll 事件，尽管我们可以通过函数节流的方式来阻止高频率的执行函数，但是我们还是需要去计算 scrollTop，offsetHeight 等属性，有没有简单的不需要计算这些属性的方式呢，答案就是 IntersectionObserver。
+通过上面例子的实现，我们要实现懒加载都需要去监听 `scroll` 事件，尽管我们可以通过函数节流的方式来阻止高频率的执行函数，但是我们还是需要去计算 `scrollTop`，`offsetHeight` 等属性，有没有简单的不需要计算这些属性的方式呢，答案就是 `IntersectionObserver`。
 
-IntersectionObserver 是一个新的 API，可以自动"观察"元素是否可见，Chrome 51+ 已经支持。由于可见（visible）的本质是，目标元素与视口产生一个交叉区，所以这个 API 叫做"交叉观察器"。我们来看一下它的用法：
+`IntersectionObserver` 是一个新的 API，可以自动"观察"元素是否可见，Chrome 51+ 已经支持。由于可见（visible）的本质是，目标元素与视口产生一个交叉区，所以这个 API 叫做"交叉观察器"。我们来看一下它的用法：
 
 ```js
 var io = new IntersectionObserver(callback, option)
@@ -144,7 +140,7 @@ io.unobserve(element)
 io.disconnect()
 ```
 
-IntersectionObserver 是浏览器原生提供的构造函数，接受两个参数：callback 是可见性变化时的回调函数，option 是配置对象（该参数可选）。
+`IntersectionObserver` 是浏览器原生提供的构造函数，接受两个参数：callback 是可见性变化时的回调函数，option 是配置对象（该参数可选）。
 
 目标元素的可见性变化时，就会调用观察器的回调函数 callback。callback 一般会触发两次。一次是目标元素刚刚进入视口（开始可见），另一次是完全离开视口（开始不可见）。
 
@@ -154,17 +150,17 @@ var io = new IntersectionObserver((entries) => {
 })
 ```
 
-callback 函数的参数（entries）是一个数组，每个成员都是一个 IntersectionObserverEntry 对象。举例来说，如果同时有两个被观察的对象的可见性发生变化，entries 数组就会有两个成员。
+callback 函数的参数`（entries）`是一个数组，每个成员都是一个 `IntersectionObserverEntry` 对象。举例来说，如果同时有两个被观察的对象的可见性发生变化，`entries` 数组就会有两个成员。
 
 - time：可见性发生变化的时间，是一个高精度时间戳，单位为毫秒
 - target：被观察的目标元素，是一个 DOM 节点对象
 - isIntersecting: 目标是否可见
-- rootBounds：根元素的矩形区域的信息，getBoundingClientRect()方法的返回值，如果没有根元素（即直接相对于视口滚动），则返回 null
+- rootBounds：根元素的矩形区域的信息，`getBoundingClientRect()`方法的返回值，如果没有根元素（即直接相对于视口滚动），则返回 null
 - boundingClientRect：目标元素的矩形区域的信息
 - intersectionRect：目标元素与视口（或根元素）的交叉区域的信息
-- intersectionRatio：目标元素的可见比例，即 intersectionRect 占 boundingClientRect 的比例，完全可见时为 1，完全不可见时小于等于 0
+- intersectionRatio：目标元素的可见比例，即 `intersectionRect` 占 `boundingClientRect` 的比例，完全可见时为 1，完全不可见时小于等于 0
 
-下面我们用 IntersectionObserver 实现图片懒加载
+下面我们用 `IntersectionObserver` 实现图片懒加载
 
 ```js
 const imgs = document.querySelectorAll('img[data-src]')
@@ -194,7 +190,7 @@ imgs.forEach((image) => {
 
 ### 懒加载指令
 
-Vue 中除了平时常用的 v-show、v-bind、v-for 等指令外，还可以自定义指令。Vue 指令定义函数提供了几个钩子函数（可选）：
+Vue 中除了平时常用的 `v-show`、`v-bind`、`v-for` 等指令外，还可以自定义指令。Vue 指令定义函数提供了几个钩子函数（可选）：
 
 - bind: 只调用一次，指令第一次绑定到元素时调用，可以定义一个在绑定时执行一次的初始化动作。
 - inserted: 被绑定元素插入父节点时调用（父节点存在即可调用，不必存在于 document 中）。
@@ -204,14 +200,14 @@ Vue 中除了平时常用的 v-show、v-bind、v-for 等指令外，还可以自
 
 实现一个懒加载指令的思路
 
-1. 判断浏览器是否支持 IntersectionObserver API，如果支持就使用 IntersectionObserver 实现懒加载，否则则使用 srcoll 事件监听 + 节流的方法实现。
-2. 通过 Vue.directive 注册一个 v-lazy 的指令，暴露一个 install()函数，供 Vue 调用。
-3. 在 main.js 里 use(指令) 即可调用。
-4. 将组件内 `<img>` 标签的 src 换成 v-lazy 即可实现图片懒加载。
+1. 判断浏览器是否支持 `IntersectionObserver` API，如果支持就使用 `IntersectionObserver` 实现懒加载，否则则使用 `srcoll` 事件监听 + 节流的方法实现。
+2. 通过 `Vue.directive` 注册一个 `v-lazy` 的指令，暴露一个 `install()` 函数，供 Vue 调用。
+3. 在 `main.js` 里 use(指令) 即可调用。
+4. 将组件内 `<img>` 标签的 `src` 换成 `v-lazy` 即可实现图片懒加载。
 
 代码如下
 
-新建 LazyLoad.js 文件
+新建 `LazyLoad.js` 文件
 
 ```js
 const LazyLoad = {
@@ -299,7 +295,7 @@ const LazyLoad = {
 export default LazyLoad
 ```
 
-在 main.js 里 use 指令
+在 `main.js` 里 use 指令
 
 ```js
 import LazyLoad from './LazyLoad.js'
@@ -309,10 +305,16 @@ Vue.use(LazyLoad, {
 })
 ```
 
-将组件内 `<img>` 标签的 src 换成 v-lazy
+将组件内 `<img>` 标签的 `src` 换成 `v-lazy`
 
 ```html
 <img v-lazy="xxx.jpg" />
 ```
 
 这样就能完成一个 vue 懒加载的指令了。
+
+### 小结
+
+1. 为提高网站加载性能，图片懒加载是必要的。
+2. 图片懒加载是实现原理是判断当前图片是否到了可视区域进行加载，可通过监听 scroll 事件和 IntersectionObserver 实现相应的功能。
+3. 可通过 Vue.directive 编写图片懒加载指令。
