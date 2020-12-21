@@ -1,9 +1,17 @@
 class Observer {
   constructor(data) {
     for (let key of Object.keys(data)) {
-      if (typeof (data[key]) === 'object') {
-        data[key] = new Observer(data[key])
+      if (typeof data === 'object') {
+        if (Array.isArray(data)) {
+          data.__proto__ = this.arrayMethods()
+        } else {
+          data[key] = new Observer(data[key])
+        }
       }
+
+      // if (typeof (data[key]) === 'object') {
+      //   data[key] = new Observer(data[key])
+      // }
       Object.defineProperty(this, key, {
         enumerable: true,
         configurable: true,
@@ -22,7 +30,44 @@ class Observer {
     }
 
   }
+
+  arrayMethods () {
+    const arrProto = Array.prototype
+    const arrayMethods = Object.create(arrProto)
+    const methods = ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse']
+    methods.forEach(function (method) {
+      const original = arrProto[method]
+      Object.defineProperty(arrayMethods, method, {
+        value: function v (...args) {
+          console.log('set arrayMethods')
+          return original.apply(this, args)
+        }
+      })
+
+    })
+    return arrayMethods
+  }
 }
+
+
+function arrayMethods () {
+  const arrProto = Array.prototype
+  const arrayMethods = Object.create(arrProto)
+  const methods = ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse']
+  methods.forEach(function (method) {
+    const original = arrProto[method]
+    Object.defineProperty(arrayMethods, method, {
+      value: function v (...args) {
+        console.log('set arrayMethods')
+        return original.apply(this, args)
+      }
+    })
+
+  })
+  return arrayMethods
+}
+
+
 
 const obj = {
   age: '18',
@@ -42,6 +87,8 @@ console.log(app.name)
 
 // Jack
 
+
+
 app.a = []
 app.a.push(3)
 app.a[0] = 1
@@ -56,3 +103,5 @@ app.a = [1, 2, 3]
 
 // 设置了1,2,3
 // 新的a是1,2,3
+
+
